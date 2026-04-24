@@ -42,15 +42,23 @@ try:
         client = OpenAI(api_key=OPENAI_API_KEY)
         # 최근 게시물 캡션들을 결합 (최대 3000자)
         context = "\n".join(latest_df['caption'].dropna().astype(str).tolist())[:3000]
-        
-        # app.py 파일 중간쯤에 있는 get_gpt_summary 함수를 이렇게 수정하세요
 
+        # 1. GPT에게 보낼 텍스트를 만들 때 링크 정보를 포함시킵니다.
+        # (get_gpt_summary 함수 윗부분이나 호출 직전에 배치)
+        context_list = []
+        for _, row in latest_df.iterrows():
+            # 계정과 URL을 결합한 참조 정보 생성
+            ref = f"[출처: @{row['ownerUsername']}]({row['url']})"
+            context_list.append(f"계정: {row['ownerUsername']}\n내용: {row['caption']}\n참조링크: {ref}")
+        
+        context = "\n\n---\n\n".join(context_list)[:4000] # 텍스트 결합
+        
         @st.cache_data(ttl=3600)
         def get_gpt_summary(text):
             # 1. 시스템 프롬프트 (GPT의 페르소나와 규칙 설정)
             system_prompt = """
             너는 데이터 기반의 F&B 트렌드 분석가이자 시장 전략가야. 
-            인스타그램 데이터를 분석하여, 마케팅 결정권자가 실무 전략 수립에 즉시 참고할 수 있는 '시장 동향 보고서'를 작성해야 해.
+            인스타그램 데이터를 분석하여, 마케팅 결정권자가 실무 전략 수립에 즉시 참고할 수 있는 내용을 작성해야 해.
         
             [작성 원칙]
             1. 현재 데이터에서 가장 두드러지는 핵심 현상을 중심으로 직접 카테고리를 생성할 것.
@@ -61,10 +69,13 @@ try:
             # 2. 유저 프롬프트 (실제 분석할 데이터와 형식 지정)
             user_prompt = f"""
             다음은 인스타그램에서 추출한 최신 F&B 관련 데이터야. 
-            이 데이터를 카테고라이징하여 마케팅 관점에서 일목요연하게 정리해줘.
+            이 데이터를 카테고라이징하여 마케팅 관점에서 일목요연하게 설명해줘.
         
             [입력 데이터]
             {text}
+
+            [출처 표시 예시]
+            [@계정명](https://www.instagram.com/p/abcde/)
             """
         
             response = client.chat.completions.create(
