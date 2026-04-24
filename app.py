@@ -103,9 +103,35 @@ try:
     flat_tags = [tag for sublist in all_tags.dropna() for tag in sublist if tag and tag not in ['nan', '광고', '협찬']]
 
     with mid1:
-        st.success("☁️ 오늘의 급상승 해시태그")
-        # 워드클라우드 대신 태그 나열 (폰트 설정 전까지는 텍스트로 표시)
-        st.write(", ".join(list(set(flat_tags))[:25]))
+        st.success("☁️ 해시태그 워드클라우드")
+    
+        if flat_tags:
+            # 해시태그 리스트를 하나의 문자열로 합침
+            text_for_wc = " ".join(flat_tags)
+            
+            # 워드클라우드 생성
+            try:
+                # font_path는 GitHub에 올린 폰트 파일명과 일치해야 함
+                wc = WordCloud(
+                    font_path='NanumGothic.otf', 
+                    width=800, 
+                    height=600, 
+                    background_color='white',
+                    colormap='viridis',
+                    prefer_horizontal=0.8
+                ).generate(text_for_wc)
+                
+                # Matplotlib을 이용해 Streamlit에 표시
+                fig, ax = plt.subplots(figsize=(10, 8))
+                ax.imshow(wc, interpolation='bilinear')
+                ax.axis('off')
+                st.pyplot(fig)
+            except Exception as e:
+                # 폰트 파일이 없거나 에러 날 경우 대비
+                st.warning(f"워드클라우드 생성 중 오류 발생 (폰트 확인 필요): {e}")
+                st.write(", ".join(list(set(flat_tags))[:25]))
+        else:
+            st.write("분석할 해시태그 데이터가 없습니다.")
 
     with mid2:
         st.warning("🔝 해시태그 TOP 10")
