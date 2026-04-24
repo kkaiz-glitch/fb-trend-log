@@ -113,7 +113,7 @@ try:
             try:
                 # font_path는 GitHub에 올린 폰트 파일명과 일치해야 함
                 wc = WordCloud(
-                    font_path='NanumGothic.otf', 
+                    font_path='NanumGothic-Regular.ttf', 
                     width=800, 
                     height=600, 
                     background_color='white',
