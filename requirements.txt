@@ -7,3 +7,4 @@ gspread-pandas
 openai
 wordcloud
 matplotlib
+wordcloud
