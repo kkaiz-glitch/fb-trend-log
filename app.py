@@ -1,15 +1,15 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+from openai import OpenAI
 
-# 1. 페이지 설정 (넓게 사용)
+# 1. 페이지 설정
 st.set_page_config(page_title="F&B 트렌드 인사이트", layout="wide")
 
-# 타이틀 및 업데이트 일자
-st.title("📊 F&B 트렌드 인사이트")
-st.caption(f"최종 업데이트 일자: {datetime.now().strftime('%Y-%m-%d')}")
+# --- 설정 (마케터님의 API 키를 입력하세요) ---
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"] 
 
-# 2. 데이터 불러오기
+# 2. 데이터 로드 함수
 @st.cache_data
 def load_data():
     df = pd.read_csv("insta_trend_master.csv")
@@ -18,80 +18,93 @@ def load_data():
 
 try:
     df = load_data()
-
-    # 3. 사이드바 - 날짜 선택 (기획안의 DATE 시작/종료일)
-    st.sidebar.header("🗓️ 기간 설정")
-    min_date = df['timestamp_kst'].min()
-    max_date = df['timestamp_kst'].max()
     
-    start_date, end_date = st.sidebar.date_input(
-        "분석 기간을 선택하세요",
-        value=(max_date - timedelta(days=1), max_date),
-        min_value=min_date,
-        max_value=max_date
-    )
-
-    # 데이터 필터링
-    filtered_df = df[(df['timestamp_kst'] >= start_date) & (df['timestamp_kst'] <= end_date)]
+    # [수정 1] 전일(최근 데이터) 기준 상단 요약용 데이터 추출
+    latest_date = df['timestamp_kst'].max()
+    latest_df = df[df['timestamp_kst'] == latest_date]
+    
+    # [수정 3] 상단 타이틀 및 수집 인사이트 건수 표시
+    st.title("📊 F&B 트렌드 인사이트")
+    col_header1, col_header2 = st.columns([1, 1])
+    with col_header1:
+        st.caption(f"최종 업데이트 일자: {latest_date}")
+    with col_header2:
+        st.write(f"🔍 **수집된 인사이트:** 총 {len(df)}건 (최근 {len(latest_df)}건 추가됨)")
 
     # ---------------------------------------------------------
-    # 4. 상단 3단 섹션 (요약 / 워드클라우드 / TOP 10)
+    # [수정 4 & 5] 상단: 오늘의 핵심 트렌드 요약 (가로로 길게)
     # ---------------------------------------------------------
-    t1, t2, t3 = st.columns([1.5, 1, 1.2], gap="large")
+    st.divider()
+    st.info("🔥 오늘의 핵심 트렌드 요약 (GPT-4o Deep Analysis)")
 
-    with t1:
-        st.info("💡 오늘의 핵심 트렌드 요약")
-        st.markdown(f"""
-        - **분석 기간:** {start_date} ~ {end_date}
-        - **수집된 인사이트:** 총 {len(filtered_df)}건의 게시물 분석 완료
-        - **핵심 요약:** 이 영역은 GPT-4o 분석 결과나 대표 캡션을 넣기에 좋습니다. 
-        """)
-        # 팁: GPT 분석 결과가 있다면 여기에 텍스트로 넣어주면 됩니다.
+    # GPT 분석 로직
+    if OPENAI_API_KEY != "sk-...":
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        # 최근 게시물 캡션들을 결합 (최대 3000자)
+        context = "\n".join(latest_df['caption'].dropna().astype(str).tolist())[:3000]
+        
+        @st.cache_data(ttl=3600) # 1시간 동안 분석 결과 캐싱
+        def get_gpt_summary(text):
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "너는 프리미엄 F&B 전략가야. 제공된 인스타그램 캡션들을 분석해 '협업/IP', '신메뉴/레시피', '소비자 라이프스타일' 관점에서 3가지 핵심 요약을 작성해줘. 마케팅 실무에 도움되는 전문적인 어조로 작성해."},
+                    {"role": "user", "content": f"다음 텍스트를 분석해줘:\n\n{text}"}
+                ]
+            )
+            return response.choices[0].message.content
 
-    with t2:
-        st.success("☁️ 급상승 해시태그 (워드클라우드 대용)")
-        # 워드클라우드 대신 간단한 태그 클라우드 시각화
-        all_tags = filtered_df['hashtags'].str.replace('[', '').str.replace(']', '').str.replace("'", "").str.split(', ')
-        flat_tags = [tag for sublist in all_tags.dropna() for tag in sublist if tag and tag != 'nan']
-        st.write(", ".join(list(set(flat_tags))[:30])) # 주요 태그 30개 나열
+        summary_result = get_gpt_summary(context)
+        st.markdown(summary_result)
+    else:
+        st.write("💡 API 키를 설정하면 GPT의 자동 요약 결과가 여기에 표시됩니다.")
 
-    with t3:
+    # ---------------------------------------------------------
+    # [수정 5] 중단: 해시태그 섹션 (좌: 워드클라우드 / 우: TOP 10)
+    # ---------------------------------------------------------
+    st.write("") # 간격 조절
+    mid1, mid2 = st.columns([1, 1])
+
+    # 해시태그 정제
+    all_tags = latest_df['hashtags'].str.replace('[', '').str.replace(']', '').str.replace("'", "").str.split(', ')
+    flat_tags = [tag for sublist in all_tags.dropna() for tag in sublist if tag and tag not in ['nan', '광고', '협찬']]
+
+    with mid1:
+        st.success("☁️ 오늘의 급상승 해시태그")
+        # 워드클라우드 대신 태그 나열 (폰트 설정 전까지는 텍스트로 표시)
+        st.write(", ".join(list(set(flat_tags))[:25]))
+
+    with mid2:
         st.warning("🔝 해시태그 TOP 10")
         tag_counts = pd.Series(flat_tags).value_counts().head(10).reset_index()
         tag_counts.columns = ['키워드', '언급수']
-        st.table(tag_counts) # 순위 표
+        st.table(tag_counts)
 
+    # ---------------------------------------------------------
+    # 하단: 날짜별 상세 데이터 분석 (기존 기능 유지)
+    # ---------------------------------------------------------
     st.divider()
+    st.subheader("🔍 기간별 상세 데이터 조회")
+    
+    # 사이드바에서 날짜 선택
+    date_list = sorted(df['timestamp_kst'].unique(), reverse=True)
+    selected_date = st.sidebar.selectbox("상세 정보를 볼 날짜를 선택하세요", date_list)
+    filtered_df = df[df['timestamp_kst'] == selected_date]
 
-    # ---------------------------------------------------------
-    # 5. 하단 섹션 (해당 날짜 요약 / 반응도 높은 게시물)
-    # ---------------------------------------------------------
-    b1, b2, b3 = st.columns([2, 1, 1], gap="medium")
-
+    b1, b2, b3 = st.columns([2, 1, 1])
     with b1:
-        st.subheader("📝 해당 기간 기준 트렌드 요약")
-        # 가장 좋아요가 많은 게시물의 캡션을 요약으로 보여줌
-        if not filtered_df.empty:
-            top_insight = filtered_df.sort_values(by='likesCount', ascending=False).iloc[0]['caption']
-            st.markdown(f"> {top_insight[:300]}...")
-        else:
-            st.write("데이터가 없습니다.")
-
+        st.write(f"📅 **{selected_date}**의 전체 게시물")
+        st.dataframe(filtered_df[['ownerUsername', 'caption', 'likesCount', 'url']], height=300)
     with b2:
-        st.subheader("❤️ 좋아요 가장 많은 게시물")
+        st.write("❤️ 좋아요 BEST")
         if not filtered_df.empty:
-            best_like = filtered_df.nlargest(1, 'likesCount')
-            st.write(f"@{best_like.iloc[0]['ownerUsername']}")
-            st.write(f"좋아요: {best_like.iloc[0]['likesCount']}개")
-            st.link_button("게시물 보기", best_like.iloc[0]['url'])
-
+            best = filtered_df.nlargest(1, 'likesCount').iloc[0]
+            st.info(f"@{best['ownerUsername']}\n\n좋아요 {best['likesCount']}개")
     with b3:
-        st.subheader("💬 댓글 가장 많은 게시물")
+        st.write("💬 댓글 BEST")
         if not filtered_df.empty:
-            best_comm = filtered_df.nlargest(1, 'commentsCount')
-            st.write(f"@{best_comm.iloc[0]['ownerUsername']}")
-            st.write(f"댓글: {best_comm.iloc[0]['commentsCount']}개")
-            st.link_button("게시물 보기", best_comm.iloc[0]['url'])
+            best = filtered_df.nlargest(1, 'commentsCount').iloc[0]
+            st.warning(f"@{best['ownerUsername']}\n\n댓글 {best['commentsCount']}개")
 
 except Exception as e:
-    st.error(f"데이터를 불러오는 중 에러가 발생했습니다: {e}")
+    st.error(f"데이터를 읽어오는 중 오류가 발생했습니다: {e}")
