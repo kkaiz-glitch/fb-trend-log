@@ -57,4 +57,4 @@ try:
         st.write(", ".join(tags.unique()[:20]))
 
 except Exception as e:
-    st.info("GitHub 저장소에 'insta_trend_master.csv' 파일을 업로드해 주세요! 에러가 발생했습니다: {e}")
+    st.error("GitHub 저장소에 'insta_trend_master.csv' 파일을 업로드해 주세요! 에러가 발생했습니다: {e}")
