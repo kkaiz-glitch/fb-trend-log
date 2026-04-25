@@ -182,34 +182,41 @@ try:
                     # 데이터 병합
                     merged = pd.merge(top_10, yesterday_counts, on='키워드', how='left').fillna(0)
                     
-                    # [로직 변경] 구분(NEW)과 증감률을 분리해서 계산
+                    # [로직 수정] 신규 진입 여부에 따른 라벨 및 증감률 처리
                     def get_new_label(row):
                         return "⭐ NEW" if row['어제언급수'] == 0 else ""
 
                     def get_change_rate(row):
+                        # 전일 데이터가 0(NEW)이면 증감률을 계산하지 않고 공란("") 반환
                         if row['어제언급수'] == 0:
-                            return "-" # 신규 진입은 증감률 계산 불가
+                            return "" 
+                        
                         rate = ((row['오늘언급수'] - row['어제언급수']) / row['어제언급수']) * 100
                         prefix = "▲" if rate > 0 else ("▼" if rate < 0 else "")
+                        
+                        # 변화가 없으면 "-" 표시, 변화가 있으면 기호와 함께 수치 표시
                         return f"{prefix} {abs(rate):.0f}%" if prefix else "-"
 
-                    merged['구분'] = merged.apply(get_new_label, axis=1)
-                    merged['전일대비'] = merged.apply(get_change_rate, axis=1)
+                    merged['상태'] = merged.apply(get_new_label, axis=1)
+                    merged['전일 대비(%)'] = merged.apply(get_change_rate, axis=1)
                     
-                    # 5. 최종 출력용 정리 (열 순서: 구분, 키워드, 언급수, 전일대비)
-                    final_table = merged[['구분', '키워드', '오늘언급수', '전일대비']]
-                    final_table.columns = ['상태', '키워드', '오늘 언급수', '전일 대비(%)']
+                    # 최종 출력용 정리
+                    final_table = merged[['상태', '키워드', '오늘언급수', '전일 대비(%)']]
+                    final_table.columns = ['상태', '키워드', '언급수', '전일 대비(%)']
                 else:
-                    top_10['상태'] = ""
-                    top_10['전일 대비(%)'] = "-"
-                    final_table = top_10[['상태', '키워드', '오늘언급수', '전일 대비(%)']]
+                    final_table = top_10.copy()
+                    final_table['상태'] = ""
+                    final_table['전일 대비(%)'] = ""
+                    final_table = final_table[['상태', '키워드', '오늘언급수', '전일 대비(%)']]
+                    final_table.columns = ['상태', '키워드', '언급수', '전일 대비(%)']
             
             except Exception as e:
-                top_10['상태'] = ""
-                top_10['전일 대비(%)'] = "-"
-                final_table = top_10[['상태', '키워드', '오늘언급수', '전일 대비(%)']]
+                final_table = top_10.copy()
+                final_table['상태'] = ""
+                final_table['전일 대비(%)'] = ""
+                final_table.columns = ['상태', '키워드', '언급수', '전일 대비(%)']
 
-            # 표 출력 (index=False를 주면 순번 없이 깔끔하게 나옵니다)
+            # 표 출력
             st.table(final_table)
         else:
             st.write("표시할 데이터가 없습니다.")
