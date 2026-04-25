@@ -107,7 +107,10 @@ try:
 
     with mid1:
         st.success("☁️ 해시태그 워드클라우드")
-    
+
+        def black_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+            return "rgb(0, 0, 0)"  # 검은색 RGB 값
+        
         if flat_tags:
             text_for_wc = " ".join(flat_tags)
             
