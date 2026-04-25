@@ -33,18 +33,18 @@ try:
     latest_df = df[df['timestamp_kst'] == latest_date]
     
     # [수정 3] 상단 타이틀 및 수집 인사이트 건수 표시
-    st.title("📊 F&B 트렌드 인사이트")
+    st.title("매일유업 F&B 트렌드 인사이트")
     col_header1, col_header2 = st.columns([1, 1])
     with col_header1:
         st.caption(f"최종 업데이트 일자: {latest_date}")
     with col_header2:
-        st.write(f"🔍 **수집된 인사이트:** 총 {len(df)}건 (최근 {len(latest_df)}건 추가됨)")
+        st.write(f"**수집된 인사이트:** 총 {len(df)}건 (최근 {len(latest_df)}건 추가됨)")
 
     # ---------------------------------------------------------
     # [수정 4 & 5] 상단: 오늘의 핵심 트렌드 요약 (가로로 길게)
     # ---------------------------------------------------------
     st.divider()
-    st.info("🔥 오늘의 핵심 트렌드 요약")
+    st.info("오늘의 핵심 트렌드 요약")
 
     # GPT 분석 로직
     if OPENAI_API_KEY != "sk-...":
@@ -99,7 +99,7 @@ try:
         summary_result = get_gpt_summary(context)
         st.markdown(summary_result)
     else:
-        st.write("💡 API 키를 설정하면 GPT의 자동 요약 결과가 여기에 표시됩니다.")
+        st.write("API 키를 설정하면 GPT의 자동 요약 결과가 여기에 표시됩니다.")
 
     # ---------------------------------------------------------
     # [수정 5] 중단: 해시태그 섹션 (좌: 워드클라우드 / 우: TOP 10)
@@ -156,7 +156,7 @@ try:
             st.write("분석할 해시태그 데이터가 없습니다.")
 
     with mid2:
-        st.warning("🔝 해시태그 TOP 10")
+        st.warning("해시태그 TOP 10")
         
         if flat_tags:
             # 1. 오늘 집계
@@ -238,7 +238,7 @@ try:
     # 하단: 기간별 트렌드 조회 (시작일/종료일 선택형)
     # ---------------------------------------------------------
     st.divider()
-    st.subheader("🔍 기간별 트렌드 조회")
+    st.subheader("기간별 트렌드 조회")
     
     # 1. 기간 선택 UI (본문 내 배치)
     col_date1, col_date2 = st.columns([1, 1])
@@ -260,7 +260,7 @@ try:
     if not filtered_df.empty:
         b1, b2, b3 = st.columns([2, 1, 1])
         with b1:
-            st.write(f"📅 **{start_date} ~ {end_date}** 기간의 게시물 ({len(filtered_df)}건)")
+            st.write(f"**{start_date} ~ {end_date}** 기간의 게시물 ({len(filtered_df)}건)")
             # 표 너비와 열 이름 정리
             st.dataframe(
                 filtered_df[['ownerUsername', 'caption', 'likesCount', 'url']], 
@@ -275,14 +275,14 @@ try:
                 hide_index=True
             )
         with b2:
-            st.write("❤️ 기간 내 좋아요 BEST")
+            st.write("기간 내 좋아요 BEST")
             best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
             st.info(f"**@{best_like['ownerUsername']}**\n\n좋아요 {best_like['likesCount']}개")
             if st.button("베스트 게시물 보기", key="btn_like"):
                 st.write(f"🔗 [인스타그램으로 이동]({best_like['url']})")
                 
         with b3:
-            st.write("💬 기간 내 댓글 BEST")
+            st.write("기간 내 댓글 BEST")
             best_comment = filtered_df.nlargest(1, 'commentsCount').iloc[0]
             st.warning(f"**@{best_comment['ownerUsername']}**\n\n댓글 {best_comment['commentsCount']}개")
             if st.button("베스트 게시물 보기", key="btn_comment"):
