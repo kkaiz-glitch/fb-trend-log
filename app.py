@@ -106,14 +106,17 @@ try:
         st.success("☁️ 해시태그 워드클라우드")
     
         if flat_tags:
-            # 해시태그 리스트를 하나의 문자열로 합침
-            text_for_wc = " ".join(flat_tags)
-            
-            # 워드클라우드 생성
-            try:
-                # font_path는 GitHub에 올린 폰트 파일명과 일치해야 함
+        text_for_wc = " ".join(flat_tags)
+        
+        # [수정] 현재 파일의 경로를 기준으로 폰트 위치를 정확히 잡습니다.
+        current_path = os.path.dirname(os.path.abspath(__file__))
+        font_file = os.path.join(current_path, 'NanumGothic-Regular.ttf')
+        
+        try:
+            # 폰트 파일이 실제로 존재하는지 한 번 더 확인하는 로직
+            if os.path.exists(font_file):
                 wc = WordCloud(
-                    font_path='NanumGothic-Regular.ttf', 
+                    font_path=font_file,  # 절대 경로로 지정
                     width=800, 
                     height=600, 
                     background_color='white',
@@ -121,15 +124,18 @@ try:
                     prefer_horizontal=0.8
                 ).generate(text_for_wc)
                 
-                # Matplotlib을 이용해 Streamlit에 표시
                 fig, ax = plt.subplots(figsize=(10, 8))
                 ax.imshow(wc, interpolation='bilinear')
                 ax.axis('off')
                 st.pyplot(fig)
-            except Exception as e:
-                # 폰트 파일이 없거나 에러 날 경우 대비
-                st.warning(f"워드클라우드 생성 중 오류 발생 (폰트 확인 필요): {e}")
+            else:
+                # 폰트 파일이 경로상에 없을 때 에러 메시지 출력
+                st.error(f"폰트 파일을 찾을 수 없습니다: {font_file}")
                 st.write(", ".join(list(set(flat_tags))[:25]))
+                
+        except Exception as e:
+            st.warning(f"워드클라우드 생성 중 오류 발생: {e}")
+            st.write(", ".join(list(set(flat_tags))[:25]))
         else:
             st.write("분석할 해시태그 데이터가 없습니다.")
 
