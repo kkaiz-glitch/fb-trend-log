@@ -116,7 +116,7 @@ try:
     ]
 
     with mid1:
-        st.success("☁️ 해시태그 워드클라우드")
+        st.success("해시태그 워드클라우드")
 
         def black_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
             return "rgb(0, 0, 0)"  # 검은색 RGB 값
@@ -231,64 +231,75 @@ try:
         else:
             st.write("표시할 데이터가 없습니다.")
 
+
     # ---------------------------------------------------------
-    # 하단: 날짜별 상세 데이터 분석 (기존 기능 유지)
-    # ---------------------------------------------------------
-    # ---------------------------------------------------------
-    # 하단: 기간별 트렌드 조회 (시작일/종료일 선택형)
+    # 하단: 기간별 트렌드 조회 (GPT 요약 우선 배치 버전)
     # ---------------------------------------------------------
     st.divider()
     st.subheader("기간별 트렌드 조회")
     
-    # 1. 기간 선택 UI (본문 내 배치)
+    # 1. 기간 선택 UI
     col_date1, col_date2 = st.columns([1, 1])
-    
-    # 전체 데이터의 날짜 범위 파악
     min_date = df['timestamp_kst'].min()
     max_date = df['timestamp_kst'].max()
     
     with col_date1:
-        start_date = st.date_input("시작일", min_date, min_value=min_date, max_value=max_date)
+        start_date = st.date_input("시작일", min_date, min_value=min_date, max_value=max_date, key="start")
     with col_date2:
-        end_date = st.date_input("종료일", max_date, min_value=min_date, max_value=max_date)
+        end_date = st.date_input("종료일", max_date, min_value=min_date, max_value=max_date, key="end")
 
-    # 2. 기간 필터링 적용
-    # 선택한 시작일과 종료일 사이의 데이터를 모두 가져옵니다.
+    # 기간 필터링
     filtered_df = df[(df['timestamp_kst'] >= start_date) & (df['timestamp_kst'] <= end_date)]
 
-    # 3. 결과 대시보드 표시
     if not filtered_df.empty:
-        b1, b2, b3 = st.columns([2, 1, 1])
-        with b1:
-            st.write(f"**{start_date} ~ {end_date}** 기간의 게시물 ({len(filtered_df)}건)")
-            # 표 너비와 열 이름 정리
-            st.dataframe(
-                filtered_df[['ownerUsername', 'caption', 'likesCount', 'url']], 
-                column_config={
-                    "ownerUsername": "계정",
-                    "caption": "내용",
-                    "likesCount": "좋아요",
-                    "url": st.column_config.LinkColumn("링크")
-                },
-                height=300,
-                use_container_width=True,
-                hide_index=True
-            )
-        with b2:
-            st.write("기간 내 좋아요 BEST")
-            best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
-            st.info(f"**@{best_like['ownerUsername']}**\n\n좋아요 {best_like['likesCount']}개")
-            if st.button("베스트 게시물 보기", key="btn_like"):
-                st.write(f"🔗 [인스타그램으로 이동]({best_like['url']})")
+        # 2. [신규] 선택 기간 GPT 핵심 요약
+        st.write("")
+        with st.expander(f"{start_date} ~ {end_date} 기간 트렌드 분석 리포트 (GPT)", expanded=True):
+            if OPENAI_API_KEY != "sk-...":
+                # 기간 내 게시물 캡션 결합
+                period_context = "\n".join(filtered_df['caption'].dropna().astype(str).tolist())[:4000]
                 
-        with b3:
-            st.write("기간 내 댓글 BEST")
+                @st.cache_data(ttl=3600)
+                def get_period_summary(text):
+                    client = OpenAI(api_key=OPENAI_API_KEY)
+                    response = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": "너는 F&B 시장 전략가야. 주어진 기간의 데이터를 분석해 소비자 반응과 마케팅 시사점을 전문적으로 요약해줘."},
+                            {"role": "user", "content": f"다음은 {start_date}부터 {end_date}까지의 데이터야. 핵심 트렌드를 요약해줘.\n\n{text}"}
+                        ]
+                    )
+                    return response.choices[0].message.content
+
+                period_summary = get_period_summary(period_context)
+                st.markdown(period_summary)
+            else:
+                st.write("API 키를 설정하면 기간별 분석이 표시됩니다.")
+
+        # 3. BEST 게시물 (중간 배치)
+        st.write("")
+        b_col1, b_col2 = st.columns(2)
+        with b_col1:
+            best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
+            st.info(f"**기간 내 좋아요 BEST**\n\n@{best_like['ownerUsername']} (좋아요 {best_like['likesCount']}개)")
+        with b_col2:
             best_comment = filtered_df.nlargest(1, 'commentsCount').iloc[0]
-            st.warning(f"**@{best_comment['ownerUsername']}**\n\n댓글 {best_comment['commentsCount']}개")
-            if st.button("베스트 게시물 보기", key="btn_comment"):
-                st.write(f"🔗 [인스타그램으로 이동]({best_comment['url']})")
+            st.warning(f"**기간 내 댓글 BEST**\n\n@{best_comment['ownerUsername']} (댓글 {best_comment['commentsCount']}개)")
+
+        # 4. 전체 게시물 리스트 (가장 아래 배치)
+        st.write("")
+        st.write(f"**전체 게시물 리스트** ({len(filtered_df)}건)")
+        st.dataframe(
+            filtered_df[['ownerUsername', 'caption', 'likesCount', 'url']], 
+            column_config={
+                "ownerUsername": st.column_config.TextColumn("**계정**"),
+                "caption": st.column_config.TextColumn("**내용**"),
+                "likesCount": st.column_config.NumberColumn("**좋아요**"),
+                "url": st.column_config.LinkColumn("**링크**")
+            },
+            height=400,
+            use_container_width=True,
+            hide_index=True
+        )
     else:
         st.warning("선택하신 기간에 수집된 데이터가 없습니다.")
-
-except Exception as e:
-    st.error(f"데이터를 읽어오는 중 오류가 발생했습니다: {e}")
