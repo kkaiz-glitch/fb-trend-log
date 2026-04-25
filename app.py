@@ -12,6 +12,12 @@ st.set_page_config(page_title="F&B 트렌드 인사이트", layout="wide")
 # --- 설정 (마케터님의 API 키를 입력하세요) ---
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"] 
 
+#제외 해시태그
+STOPWORDS = [
+    '광고', '협찬', 'CU', '빵효진_cu', '빵효진_세븐일레븐', '공구', 
+    '체험단', '서포터즈', '인스타그램', '팔로우', '좋아요', 'nan', '일상', '소통'
+]
+
 # 2. 데이터 로드 함수
 @st.cache_data
 def load_data():
@@ -103,7 +109,11 @@ try:
 
     # 해시태그 정제
     all_tags = latest_df['hashtags'].str.replace('[', '').str.replace(']', '').str.replace("'", "").str.split(', ')
-    flat_tags = [tag for sublist in all_tags.dropna() for tag in sublist if tag and tag not in ['nan', '광고', '협찬']]
+    flat_tags = [
+        tag for sublist in all_tags.dropna() 
+        for tag in sublist 
+        if tag and (tag not in STOPWORDS) and (tag.replace('#', '') not in STOPWORDS)
+    ]
 
     with mid1:
         st.success("☁️ 해시태그 워드클라우드")
