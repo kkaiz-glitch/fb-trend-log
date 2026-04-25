@@ -125,9 +125,9 @@ try:
                         font_path=font_file,  # 절대 경로로 지정
                         width=800, 
                         height=600, 
-                        background_color='white',
-                        colormap='viridis',
-                        prefer_horizontal=0.8
+                        background_color='white',  # 배경은 흰색
+                        prefer_horizontal=0.8,
+                        color_func=black_color_func
                     ).generate(text_for_wc)
                     
                     fig, ax = plt.subplots(figsize=(10, 8))
