@@ -220,10 +220,10 @@ try:
             st.dataframe(
                 final_table,
                 column_config={
-                    "상태": st.column_config.TextColumn("**상태**"), 
-                    "키워드": st.column_config.TextColumn("**키워드**"),
-                    "언급수": st.column_config.NumberColumn("**언급수**"),
-                    "전일 대비(%)": st.column_config.TextColumn("**전일 대비(%)**"),
+                    "상태": st.column_config.TextColumn("NEW"), 
+                    "키워드": st.column_config.TextColumn("키워드"),
+                    "언급수": st.column_config.NumberColumn("언급수"),
+                    "전일 대비(%)": st.column_config.TextColumn("전일대비(%)"),
                 },
                 hide_index=True,
                 use_container_width=True  # 모든 열 너비를 화면에 맞춰 균등하게 배분
