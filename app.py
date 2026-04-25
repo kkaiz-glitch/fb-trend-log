@@ -156,7 +156,7 @@ try:
             st.write("분석할 해시태그 데이터가 없습니다.")
 
     with mid2:
-        st.warning("🔝 해시태그 TOP 10 (전일 대비 분석)")
+        st.warning("🔝 해시태그 TOP 10")
         
         if flat_tags:
             # 1. 오늘 집계
@@ -234,28 +234,61 @@ try:
     # ---------------------------------------------------------
     # 하단: 날짜별 상세 데이터 분석 (기존 기능 유지)
     # ---------------------------------------------------------
+    # ---------------------------------------------------------
+    # 하단: 기간별 트렌드 조회 (시작일/종료일 선택형)
+    # ---------------------------------------------------------
     st.divider()
-    st.subheader("🔍 기간별 상세 데이터 조회")
+    st.subheader("🔍 기간별 트렌드 조회")
     
-    # 사이드바에서 날짜 선택
-    date_list = sorted(df['timestamp_kst'].unique(), reverse=True)
-    selected_date = st.sidebar.selectbox("상세 정보를 볼 날짜를 선택하세요", date_list)
-    filtered_df = df[df['timestamp_kst'] == selected_date]
+    # 1. 기간 선택 UI (본문 내 배치)
+    col_date1, col_date2 = st.columns([1, 1])
+    
+    # 전체 데이터의 날짜 범위 파악
+    min_date = df['timestamp_kst'].min()
+    max_date = df['timestamp_kst'].max()
+    
+    with col_date1:
+        start_date = st.date_input("시작일", min_date, min_value=min_date, max_value=max_date)
+    with col_date2:
+        end_date = st.date_input("종료일", max_date, min_value=min_date, max_value=max_date)
 
-    b1, b2, b3 = st.columns([2, 1, 1])
-    with b1:
-        st.write(f"📅 **{selected_date}**의 전체 게시물")
-        st.dataframe(filtered_df[['ownerUsername', 'caption', 'likesCount', 'url']], height=300)
-    with b2:
-        st.write("❤️ 좋아요 BEST")
-        if not filtered_df.empty:
-            best = filtered_df.nlargest(1, 'likesCount').iloc[0]
-            st.info(f"@{best['ownerUsername']}\n\n좋아요 {best['likesCount']}개")
-    with b3:
-        st.write("💬 댓글 BEST")
-        if not filtered_df.empty:
-            best = filtered_df.nlargest(1, 'commentsCount').iloc[0]
-            st.warning(f"@{best['ownerUsername']}\n\n댓글 {best['commentsCount']}개")
+    # 2. 기간 필터링 적용
+    # 선택한 시작일과 종료일 사이의 데이터를 모두 가져옵니다.
+    filtered_df = df[(df['timestamp_kst'] >= start_date) & (df['timestamp_kst'] <= end_date)]
+
+    # 3. 결과 대시보드 표시
+    if not filtered_df.empty:
+        b1, b2, b3 = st.columns([2, 1, 1])
+        with b1:
+            st.write(f"📅 **{start_date} ~ {end_date}** 기간의 게시물 ({len(filtered_df)}건)")
+            # 표 너비와 열 이름 정리
+            st.dataframe(
+                filtered_df[['ownerUsername', 'caption', 'likesCount', 'url']], 
+                column_config={
+                    "ownerUsername": "계정",
+                    "caption": "내용",
+                    "likesCount": "좋아요",
+                    "url": st.column_config.LinkColumn("링크")
+                },
+                height=300,
+                use_container_width=True,
+                hide_index=True
+            )
+        with b2:
+            st.write("❤️ 기간 내 좋아요 BEST")
+            best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
+            st.info(f"**@{best_like['ownerUsername']}**\n\n좋아요 {best_like['likesCount']}개")
+            if st.button("베스트 게시물 보기", key="btn_like"):
+                st.write(f"🔗 [인스타그램으로 이동]({best_like['url']})")
+                
+        with b3:
+            st.write("💬 기간 내 댓글 BEST")
+            best_comment = filtered_df.nlargest(1, 'commentsCount').iloc[0]
+            st.warning(f"**@{best_comment['ownerUsername']}**\n\n댓글 {best_comment['commentsCount']}개")
+            if st.button("베스트 게시물 보기", key="btn_comment"):
+                st.write(f"🔗 [인스타그램으로 이동]({best_comment['url']})")
+    else:
+        st.warning("선택하신 기간에 수집된 데이터가 없습니다.")
 
 except Exception as e:
     st.error(f"데이터를 읽어오는 중 오류가 발생했습니다: {e}")
