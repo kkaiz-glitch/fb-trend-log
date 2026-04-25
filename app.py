@@ -156,51 +156,67 @@ try:
             st.write("분석할 해시태그 데이터가 없습니다.")
 
     with mid2:
-        st.warning("🔝 해시태그 TOP 10")
+        st.warning("🔝 해시태그 TOP 10 (전일 대비)")
         
         if flat_tags:
             # 1. 오늘(최근 날짜)의 태그 집계
-            tag_counts = pd.Series(flat_tags).value_counts().head(10).reset_index()
-            tag_counts.columns = ['키워드', '언급수']
+            today_counts = pd.Series(flat_tags).value_counts().reset_index()
+            today_counts.columns = ['키워드', '오늘언급수']
+            
+            # 상위 10개 추출 전, 비교를 위해 전체 데이터 유지
+            top_10 = today_counts.head(10).copy()
 
-            # 2. 어제(최근 이전 날짜)의 태그 데이터 가져오기
+            # 2. 어제(최근 이전 날짜)의 태그 데이터 집계
             try:
-                # 전체 날짜 리스트에서 가장 최근 날짜를 제외한 이전 날짜들 중 가장 큰 값 찾기
                 all_dates = sorted(df['timestamp_kst'].unique())
                 if len(all_dates) >= 2:
                     yesterday_date = all_dates[-2]
                     yesterday_df = df[df['timestamp_kst'] == yesterday_date]
                     
-                    # 어제 해시태그 리스트 생성
                     yesterday_tags_raw = yesterday_df['hashtags'].str.replace('[', '').str.replace(']', '').str.replace("'", "").str.split(', ')
                     yesterday_flat_tags = [
                         tag.strip() for sublist in yesterday_tags_raw.dropna() 
                         for tag in sublist if tag and tag.strip() not in STOPWORDS
                     ]
                     
-                    # 3. 오늘 TOP 10 키워드 중 어제 없었던 키워드에 'NEW' 표시 추가
-                    def check_new(keyword):
-                        if keyword not in yesterday_flat_tags:
-                            return "⭐ NEW"
-                        return ""
-
-                    # '구분' 열을 맨 앞에 추가
-                    tag_counts['구분'] = tag_counts['키워드'].apply(check_new)
+                    # 어제 데이터의 언급수 계산
+                    yesterday_counts = pd.Series(yesterday_flat_tags).value_counts().reset_index()
+                    yesterday_counts.columns = ['키워드', '어제언급수']
                     
-                    # 열 순서 재배치 (구분, 키워드, 언급수)
-                    tag_counts = tag_counts[['구분', '키워드', '언급수']]
+                    # 3. 데이터 병합 (오늘 TOP 10 + 어제 언급수)
+                    merged = pd.merge(top_10, yesterday_counts, on='키워드', how='left').fillna(0)
+                    
+                    # 4. NEW 표시 및 증감률 계산 로직
+                    def get_status(row):
+                        if row['어제언급수'] == 0:
+                            return "⭐ NEW"
+                        
+                        # 증감률 계산: ((오늘 - 어제) / 어제) * 100
+                        change_rate = ((row['오늘언급수'] - row['어제언급수']) / row['어제언급수']) * 100
+                        if change_rate > 0:
+                            return f"▲ {change_rate:.0f}%"
+                        elif change_rate < 0:
+                            return f"▼ {abs(change_rate):.0f}%"
+                        else:
+                            return "-"
+
+                    merged['트렌드'] = merged.apply(get_status, axis=1)
+                    
+                    # 최종 출력용 정리
+                    final_table = merged[['트렌드', '키워드', '오늘언급수']]
+                    final_table.columns = ['구분', '키워드', '언급수']
                 else:
-                    # 비교할 이전 데이터가 없을 경우
-                    tag_counts['구분'] = ""
-                    tag_counts = tag_counts[['구분', '키워드', '언급수']]
+                    top_10['구분'] = ""
+                    final_table = top_10[['구분', '키워드', '오늘언급수']]
+                    final_table.columns = ['구분', '키워드', '언급수']
             
             except Exception as e:
-                # 에러 발생 시 기본 표만 표시
-                tag_counts['구분'] = ""
-                tag_counts = tag_counts[['구분', '키워드', '언급수']]
+                top_10['구분'] = ""
+                final_table = top_10[['구분', '키워드', '오늘언급수']]
+                final_table.columns = ['구분', '키워드', '언급수']
 
             # 표 출력
-            st.table(tag_counts)
+            st.table(final_table)
         else:
             st.write("표시할 데이터가 없습니다.")
 
