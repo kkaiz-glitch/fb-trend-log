@@ -156,17 +156,14 @@ try:
             st.write("분석할 해시태그 데이터가 없습니다.")
 
     with mid2:
-        st.warning("🔝 해시태그 TOP 10 (전일 대비)")
+        st.warning("🔝 해시태그 TOP 10 (전일 대비 분석)")
         
         if flat_tags:
-            # 1. 오늘(최근 날짜)의 태그 집계
+            # 1. 오늘 집계
             today_counts = pd.Series(flat_tags).value_counts().reset_index()
             today_counts.columns = ['키워드', '오늘언급수']
-            
-            # 상위 10개 추출 전, 비교를 위해 전체 데이터 유지
             top_10 = today_counts.head(10).copy()
 
-            # 2. 어제(최근 이전 날짜)의 태그 데이터 집계
             try:
                 all_dates = sorted(df['timestamp_kst'].unique())
                 if len(all_dates) >= 2:
@@ -179,43 +176,40 @@ try:
                         for tag in sublist if tag and tag.strip() not in STOPWORDS
                     ]
                     
-                    # 어제 데이터의 언급수 계산
                     yesterday_counts = pd.Series(yesterday_flat_tags).value_counts().reset_index()
                     yesterday_counts.columns = ['키워드', '어제언급수']
                     
-                    # 3. 데이터 병합 (오늘 TOP 10 + 어제 언급수)
+                    # 데이터 병합
                     merged = pd.merge(top_10, yesterday_counts, on='키워드', how='left').fillna(0)
                     
-                    # 4. NEW 표시 및 증감률 계산 로직
-                    def get_status(row):
-                        if row['어제언급수'] == 0:
-                            return "⭐ NEW"
-                        
-                        # 증감률 계산: ((오늘 - 어제) / 어제) * 100
-                        change_rate = ((row['오늘언급수'] - row['어제언급수']) / row['어제언급수']) * 100
-                        if change_rate > 0:
-                            return f"▲ {change_rate:.0f}%"
-                        elif change_rate < 0:
-                            return f"▼ {abs(change_rate):.0f}%"
-                        else:
-                            return "-"
+                    # [로직 변경] 구분(NEW)과 증감률을 분리해서 계산
+                    def get_new_label(row):
+                        return "⭐ NEW" if row['어제언급수'] == 0 else ""
 
-                    merged['트렌드'] = merged.apply(get_status, axis=1)
+                    def get_change_rate(row):
+                        if row['어제언급수'] == 0:
+                            return "-" # 신규 진입은 증감률 계산 불가
+                        rate = ((row['오늘언급수'] - row['어제언급수']) / row['어제언급수']) * 100
+                        prefix = "▲" if rate > 0 else ("▼" if rate < 0 else "")
+                        return f"{prefix} {abs(rate):.0f}%" if prefix else "-"
+
+                    merged['구분'] = merged.apply(get_new_label, axis=1)
+                    merged['전일대비'] = merged.apply(get_change_rate, axis=1)
                     
-                    # 최종 출력용 정리
-                    final_table = merged[['트렌드', '키워드', '오늘언급수']]
-                    final_table.columns = ['구분', '키워드', '언급수']
+                    # 5. 최종 출력용 정리 (열 순서: 구분, 키워드, 언급수, 전일대비)
+                    final_table = merged[['구분', '키워드', '오늘언급수', '전일대비']]
+                    final_table.columns = ['상태', '키워드', '오늘 언급수', '전일 대비(%)']
                 else:
-                    top_10['구분'] = ""
-                    final_table = top_10[['구분', '키워드', '오늘언급수']]
-                    final_table.columns = ['구분', '키워드', '언급수']
+                    top_10['상태'] = ""
+                    top_10['전일 대비(%)'] = "-"
+                    final_table = top_10[['상태', '키워드', '오늘언급수', '전일 대비(%)']]
             
             except Exception as e:
-                top_10['구분'] = ""
-                final_table = top_10[['구분', '키워드', '오늘언급수']]
-                final_table.columns = ['구분', '키워드', '언급수']
+                top_10['상태'] = ""
+                top_10['전일 대비(%)'] = "-"
+                final_table = top_10[['상태', '키워드', '오늘언급수', '전일 대비(%)']]
 
-            # 표 출력
+            # 표 출력 (index=False를 주면 순번 없이 깔끔하게 나옵니다)
             st.table(final_table)
         else:
             st.write("표시할 데이터가 없습니다.")
