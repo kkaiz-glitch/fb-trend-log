@@ -303,3 +303,6 @@ try:
         )
     else:
         st.warning("선택하신 기간에 수집된 데이터가 없습니다.")
+
+except Exception as e:
+    st.error(f"데이터를 읽어오는 중 오류가 발생했습니다: {e}")
