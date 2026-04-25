@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from openai import OpenAI
 from wordcloud import WordCloud
 import os
+import matplotlib.pyplot as plt
 
 # 1. 페이지 설정
 st.set_page_config(page_title="F&B 트렌드 인사이트", layout="wide")
