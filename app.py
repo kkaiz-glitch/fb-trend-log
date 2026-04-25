@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from openai import OpenAI
+from wordcloud import WordCloud
 
 # 1. 페이지 설정
 st.set_page_config(page_title="F&B 트렌드 인사이트", layout="wide")
