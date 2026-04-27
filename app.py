@@ -254,7 +254,7 @@ try:
     if not filtered_df.empty:
         # 2. [신규] 선택 기간 GPT 핵심 요약
         st.write("")
-        with st.expander(f"{start_date} ~ {end_date} 기간 트렌드 분석 리포트 (GPT)", expanded=True):
+        st.info(f"{start_date} ~ {end_date} 기간 트렌드 분석 리포트")
             if OPENAI_API_KEY != "sk-...":
                 # 기간 내 게시물 캡션 결합
                 period_context = "\n".join(filtered_df['caption'].dropna().astype(str).tolist())[:4000]
