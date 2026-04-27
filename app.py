@@ -258,8 +258,8 @@ try:
     # ---------------------------------------------------------
     st.divider()
     st.markdown("""
-        <div style="background-color: #E3F1C5; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #435715;">
-            <h4 style="margin: 0; padding: 0; color: #435715; font-weight: bold; line-height: 1.2;">
+        <div style="background-color: #FFF4E5; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #FF8800;">
+            <h4 style="margin: 0; padding: 0; color: #FF8800; font-weight: bold; line-height: 1.2;">
                 기간별 트렌드 조회
             </h4>
         </div>
@@ -319,8 +319,8 @@ try:
         with b_col1:
             best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
             st.markdown(f"""
-                <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #004085;">
-                    <h4 style="margin: 0 0 10px 0; color: #004085; font-weight: bold;">좋아요 BEST</h4>
+                <div style="background-color: #FFFFE7; padding: 15px; border-radius: 10px; border-left: 5px solid #916900;">
+                    <h4 style="margin: 0 0 10px 0; color: #916900; font-weight: bold;">좋아요 BEST</h4>
                     <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">@{best_like['ownerUsername']}</p>
                     <p style="margin: 5px 0; color: #555; font-size: 14px;">❤️ 좋아요 {best_like['likesCount']:,}개</p>
                 </div>
@@ -336,8 +336,8 @@ try:
         with b_col2:
             best_comment = filtered_df.nlargest(1, 'commentsCount').iloc[0]
             st.markdown(f"""
-                <div style="background-color: #fff4e5; padding: 15px; border-radius: 10px; border-left: 5px solid #ff8c00;">
-                    <h4 style="margin: 0 0 10px 0; color: #ff8c00; font-weight: bold;">댓글 BEST</h4>
+                <div style="background-color: #FFFFE7; padding: 15px; border-radius: 10px; border-left: 5px solid #916900;">
+                    <h4 style="margin: 0 0 10px 0; color: #916900; font-weight: bold;">댓글 BEST</h4>
                     <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">@{best_comment['ownerUsername']}</p>
                     <p style="margin: 5px 0; color: #555; font-size: 14px;">💬 댓글 {best_comment['commentsCount']:,}개</p>
                 </div>
