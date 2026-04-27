@@ -45,7 +45,7 @@ try:
     # ---------------------------------------------------------
     st.divider()
     st.markdown("""
-    <div style="background-color: #e8f4f9; padding: 10px; border-radius: 8px;">
+    <div style="background-color: #e8f4f9; padding: 8px; border-radius: 8px;">
         <h3 style="margin: 0; color: #004085; font-weight: bold;">오늘의 핵심 트렌드 요약</h3>
     </div>
     """, unsafe_allow_html=True)
