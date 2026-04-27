@@ -318,39 +318,36 @@ try:
         
         with b_col1:
             best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
-            st.markdown("""
-                <div style="background-color: #f0f2f6; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #004085; margin-bottom: 10px;">
-                    <h4 style="margin: 0; padding: 0; color: #004085; font-weight: bold;">좋아요 BEST</h4>
+            st.markdown(f"""
+                <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #004085;">
+                    <h4 style="margin: 0 0 10px 0; color: #004085; font-weight: bold;">좋아요 BEST</h4>
+                    <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">@{best_like['ownerUsername']}</p>
+                    <p style="margin: 5px 0; color: #555; font-size: 14px;">❤️ 좋아요 {best_like['likesCount']:,}개</p>
                 </div>
                 """, unsafe_allow_html=True)
             
-            # 이미지 출력 (displayUrl 컬럼이 있다고 가정)
-            if 'displayUrl' in best_like and pd.notna(best_like['displayUrl']):
-                st.image(best_like['displayUrl'], use_container_width=True)
-            
-            # 정보 및 본문 요약 출력
-            st.info(f"**@{best_like['ownerUsername']}** | 좋아요 {best_like['likesCount']}개")
-            with st.expander("게시글 본문 보기"):
-                st.write(best_like['caption'])
-            st.write(f"🔗 [게시물 바로가기]({best_like['url']})")
+            with st.container(border=True):
+                st.write("**컨텐츠 내용**")
+                # 본문이 너무 길면 일부만 노출
+                caption_text = best_like['caption'] if len(str(best_like['caption'])) < 300 else str(best_like['caption'])[:300] + "..."
+                st.write(caption_text)
+                st.link_button("인스타그램에서 사진 확인", best_like['url'], use_container_width=True)
 
         with b_col2:
             best_comment = filtered_df.nlargest(1, 'commentsCount').iloc[0]
-            st.markdown("""
-                <div style="background-color: #fff4e5; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #ff8c00; margin-bottom: 10px;">
-                    <h4 style="margin: 0; padding: 0; color: #ff8c00; font-weight: bold;">댓글 BEST</h4>
+            st.markdown(f"""
+                <div style="background-color: #fff4e5; padding: 15px; border-radius: 10px; border-left: 5px solid #ff8c00;">
+                    <h4 style="margin: 0 0 10px 0; color: #ff8c00; font-weight: bold;">댓글 BEST</h4>
+                    <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">@{best_comment['ownerUsername']}</p>
+                    <p style="margin: 5px 0; color: #555; font-size: 14px;">💬 댓글 {best_comment['commentsCount']:,}개</p>
                 </div>
                 """, unsafe_allow_html=True)
             
-            # 이미지 출력
-            if 'displayUrl' in best_comment and pd.notna(best_comment['displayUrl']):
-                st.image(best_comment['displayUrl'], use_container_width=True)
-            
-            # 정보 및 본문 요약 출력
-            st.warning(f"**@{best_comment['ownerUsername']}** | 댓글 {best_comment['commentsCount']}개")
-            with st.expander("게시글 본문 보기"):
-                st.write(best_comment['caption'])
-            st.write(f"🔗 [게시물 바로가기]({best_comment['url']})")
+            with st.container(border=True):
+                st.write("**컨텐츠 내용**")
+                caption_text = best_comment['caption'] if len(str(best_comment['caption'])) < 300 else str(best_comment['caption'])[:300] + "..."
+                st.write(caption_text)
+                st.link_button("인스타그램에서 사진 확인", best_comment['url'], use_container_width=True)
             
         # 4. 전체 게시물 리스트 (가장 아래 배치)
         st.write("")
