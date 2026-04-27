@@ -44,7 +44,12 @@ try:
     # [수정 4 & 5] 상단: 오늘의 핵심 트렌드 요약 (가로로 길게)
     # ---------------------------------------------------------
     st.divider()
-    st.markdown("### 오늘의 핵심 트렌드 요약")
+    st.markdown("""
+    <div style="background-color: #e8f4f9; padding: 20px; border-radius: 10px;">
+        <h3 style="margin: 0; color: #004085; font-weight: bold;">오늘의 핵심 트렌드 요약</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    st.write("") # 박스와 아래 내용 사이 간격
 
     # GPT 분석 로직
     if OPENAI_API_KEY != "sk-...":
