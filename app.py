@@ -282,7 +282,14 @@ try:
     if not filtered_df.empty:
         # 2. [신규] 선택 기간 GPT 핵심 요약
         st.write("")
-        st.info(f"{start_date} ~ {end_date} 기간 트렌드 분석 리포트")
+        st.markdown("""
+            <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900;">
+                <h4 style="margin: 0; padding: 0; color: #916900; font-weight: bold; line-height: 1.2;">
+                    f"{start_date} ~ {end_date} 기간 트렌드 분석 리포트"
+                </h4>
+            </div>
+            """, unsafe_allow_html=True)
+        st.write("")
         
         if OPENAI_API_KEY != "sk-...":
             # 기간 내 게시물 캡션 결합
