@@ -147,8 +147,8 @@ try:
                 if os.path.exists(font_file):
                     wc = WordCloud(
                         font_path=font_file,  # 절대 경로로 지정
-                        width=800, 
-                        height=600, 
+                        width=600, 
+                        height=400, 
                         background_color='white',  # 배경은 흰색
                         prefer_horizontal=0.8,
                         color_func=black_color_func
@@ -170,7 +170,14 @@ try:
             st.write("분석할 해시태그 데이터가 없습니다.")
 
     with mid2:
-        st.info("해시태그 TOP 10")
+        st.markdown("""
+            <div style="background-color: #e8f4f9; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #004085;">
+                <h4 style="margin: 0; padding: 0; color: #004085; font-weight: bold; line-height: 1.2;">
+                    해시태그 TOP 10
+                </h4>
+            </div>
+            """, unsafe_allow_html=True)
+        st.write("")
         
         if flat_tags:
             # 1. 오늘 집계
