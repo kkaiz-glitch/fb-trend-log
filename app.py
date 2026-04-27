@@ -257,7 +257,14 @@ try:
     # 하단: 기간별 트렌드 조회 (GPT 요약 우선 배치 버전)
     # ---------------------------------------------------------
     st.divider()
-    st.subheader("기간별 트렌드 조회")
+    st.markdown("""
+        <div style="background-color: #E3F1C5; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #435715;">
+            <h4 style="margin: 0; padding: 0; color: #435715; font-weight: bold; line-height: 1.2;">
+                기간별 트렌드 조회
+            </h4>
+        </div>
+        """, unsafe_allow_html=True)
+    st.write("")
     
     # 1. 기간 선택 UI
     col_date1, col_date2 = st.columns([1, 1])
