@@ -323,7 +323,7 @@ try:
             best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
             # 상단: 제목만 배치
             st.markdown(f"""
-                <div style="background-color: #FFFFE7; padding: 15px; border-radius: 10px; border-left: 5px solid #916900;">
+                <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900;">
                     <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">좋아요 BEST</h4>
                 </div>
                 """, unsafe_allow_html=True)
@@ -342,7 +342,7 @@ try:
             best_comment = filtered_df.nlargest(1, 'commentsCount').iloc[0]
             # 상단: 제목만 배치
             st.markdown(f"""
-                <div style="background-color: #FFFFE7; padding: 15px; border-radius: 10px; border-left: 5px solid #916900;">
+                <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900;">
                     <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">댓글 BEST</h4>
                 </div>
                 """, unsafe_allow_html=True)
