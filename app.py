@@ -255,26 +255,27 @@ try:
         # 2. [신규] 선택 기간 GPT 핵심 요약
         st.write("")
         st.info(f"{start_date} ~ {end_date} 기간 트렌드 분석 리포트")
-            if OPENAI_API_KEY != "sk-...":
-                # 기간 내 게시물 캡션 결합
-                period_context = "\n".join(filtered_df['caption'].dropna().astype(str).tolist())[:4000]
-                
-                @st.cache_data(ttl=3600)
-                def get_period_summary(text):
-                    client = OpenAI(api_key=OPENAI_API_KEY)
-                    response = client.chat.completions.create(
-                        model="gpt-4o",
-                        messages=[
-                            {"role": "system", "content": "너는 F&B 시장 전략가야. 주어진 기간의 데이터를 분석해 소비자 반응과 마케팅 시사점을 전문적으로 요약해줘."},
-                            {"role": "user", "content": f"다음은 {start_date}부터 {end_date}까지의 데이터야. 핵심 트렌드를 요약해줘.\n\n{text}"}
-                        ]
-                    )
-                    return response.choices[0].message.content
+        
+        if OPENAI_API_KEY != "sk-...":
+            # 기간 내 게시물 캡션 결합
+            period_context = "\n".join(filtered_df['caption'].dropna().astype(str).tolist())[:4000]
+            
+            @st.cache_data(ttl=3600)
+            def get_period_summary(text):
+                client = OpenAI(api_key=OPENAI_API_KEY)
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": "너는 F&B 시장 전략가야. 주어진 기간의 데이터를 분석해 소비자 반응과 마케팅 시사점을 전문적으로 요약해줘."},
+                        {"role": "user", "content": f"다음은 {start_date}부터 {end_date}까지의 데이터야. 핵심 트렌드를 요약해줘.\n\n{text}"}
+                    ]
+                )
+                return response.choices[0].message.content
 
-                period_summary = get_period_summary(period_context)
-                st.markdown(period_summary)
-            else:
-                st.write("API 키를 설정하면 기간별 분석이 표시됩니다.")
+            period_summary = get_period_summary(period_context)
+            st.markdown(period_summary)
+        else:
+            st.write("API 키를 설정하면 기간별 분석이 표시됩니다.")
 
         # 3. BEST 게시물 (중간 배치)
         st.write("")
