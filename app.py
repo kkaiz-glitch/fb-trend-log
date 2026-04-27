@@ -310,7 +310,15 @@ try:
         b_col1, b_col2 = st.columns(2)
         with b_col1:
             best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
-            st.info(f"**기간 내 좋아요 BEST**\n\n@{best_like['ownerUsername']} (좋아요 {best_like['likesCount']}개)")
+            st.markdown("""
+                <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900;">
+                    <h4 style="margin: 0; padding: 0; color: #916900; font-weight: bold; line-height: 1.2;">
+                        기간 내 좋아요
+                    </h4>
+                </div>
+                """, unsafe_allow_html=True)
+            st.write("")
+            st.info(f"**좋아요 BEST**\n\n@{best_like['ownerUsername']} (좋아요 {best_like['likesCount']}개)")
         with b_col2:
             best_comment = filtered_df.nlargest(1, 'commentsCount').iloc[0]
             st.warning(f"**기간 내 댓글 BEST**\n\n@{best_comment['ownerUsername']} (댓글 {best_comment['commentsCount']}개)")
