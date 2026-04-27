@@ -316,38 +316,46 @@ try:
         st.write("")
         b_col1, b_col2 = st.columns(2)
         
+        st.write("")
+        b_col1, b_col2 = st.columns(2)
+        
         with b_col1:
             best_like = filtered_df.nlargest(1, 'likesCount').iloc[0]
+            # 상단: 제목만 배치
             st.markdown(f"""
                 <div style="background-color: #FFFFE7; padding: 15px; border-radius: 10px; border-left: 5px solid #916900;">
-                    <h4 style="margin: 0 0 10px 0; color: #916900; font-weight: bold;">좋아요 BEST</h4>
-                    <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">@{best_like['ownerUsername']}</p>
-                    <p style="margin: 5px 0; color: #555; font-size: 14px;">❤️ 좋아요 {best_like['likesCount']:,}개</p>
+                    <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">좋아요 BEST</h4>
                 </div>
                 """, unsafe_allow_html=True)
             
+            # 하단: 계정, 수치, 본문 내용 통합 배치
             with st.container(border=True):
+                st.write(f"**계정:** @{best_like['ownerUsername']}")
+                st.write(f"**좋아요:** {best_like['likesCount']:,}개")
+                st.write("---")
                 st.write("**컨텐츠 내용**")
-                # 본문이 너무 길면 일부만 노출
                 caption_text = best_like['caption'] if len(str(best_like['caption'])) < 300 else str(best_like['caption'])[:300] + "..."
                 st.write(caption_text)
-                st.link_button("인스타그램에서 사진 확인", best_like['url'], use_container_width=True)
+                st.link_button("게시글 확인", best_like['url'], use_container_width=True)
 
         with b_col2:
             best_comment = filtered_df.nlargest(1, 'commentsCount').iloc[0]
+            # 상단: 제목만 배치
             st.markdown(f"""
                 <div style="background-color: #FFFFE7; padding: 15px; border-radius: 10px; border-left: 5px solid #916900;">
-                    <h4 style="margin: 0 0 10px 0; color: #916900; font-weight: bold;">댓글 BEST</h4>
-                    <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">@{best_comment['ownerUsername']}</p>
-                    <p style="margin: 5px 0; color: #555; font-size: 14px;">💬 댓글 {best_comment['commentsCount']:,}개</p>
+                    <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">댓글 BEST</h4>
                 </div>
                 """, unsafe_allow_html=True)
             
+            # 하단: 계정, 수치, 본문 내용 통합 배치
             with st.container(border=True):
+                st.write(f"**계정:** @{best_comment['ownerUsername']}")
+                st.write(f"**댓글:** {best_comment['commentsCount']:,}개")
+                st.write("---")
                 st.write("**컨텐츠 내용**")
                 caption_text = best_comment['caption'] if len(str(best_comment['caption'])) < 300 else str(best_comment['caption'])[:300] + "..."
                 st.write(caption_text)
-                st.link_button("인스타그램에서 사진 확인", best_comment['url'], use_container_width=True)
+                st.link_button("게시글 확인", best_comment['url'], use_container_width=True)
             
         # 4. 전체 게시물 리스트 (가장 아래 배치)
         st.write("")
