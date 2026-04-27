@@ -123,7 +123,14 @@ try:
     ]
 
     with mid1:
-        st.info("해시태그 워드클라우드")
+        st.markdown("""
+            <div style="background-color: #e8f4f9; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #004085;">
+                <h4 style="margin: 0; padding: 0; color: #004085; font-weight: bold; line-height: 1.2;">
+                    해시태그 워드클라우드
+                </h4>
+            </div>
+            """, unsafe_allow_html=True)
+        st.write("")
 
         def black_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
             return "rgb(0, 0, 0)"  # 검은색 RGB 값
