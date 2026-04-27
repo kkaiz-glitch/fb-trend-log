@@ -45,11 +45,13 @@ try:
     # ---------------------------------------------------------
     st.divider()
     st.markdown("""
-    <div style="background-color: #e8f4f9; padding: 10px; border-radius: 5px;">
-        <h3 style="margin: 0; color: #004085; font-weight: bold;">오늘의 핵심 트렌드 요약</h3>
+    <div style="background-color: #e8f4f9; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #004085;">
+        <h4 style="margin: 0; padding: 0; color: #004085; font-weight: bold; line-height: 1.2;">
+            오늘의 핵심 트렌드 요약
+        </h4>
     </div>
     """, unsafe_allow_html=True)
-    st.write("") # 박스와 아래 내용 사이 간격
+    st.write("")
 
     # GPT 분석 로직
     if OPENAI_API_KEY != "sk-...":
