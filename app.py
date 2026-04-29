@@ -324,7 +324,7 @@ try:
             # 상단: 제목만 배치
             st.markdown(f"""
                 <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900;">
-                    <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">좋아요 BEST</h4>
+                    <h4 style="margin: 0; padding: 0; color: #916900; font-weight: bold; line-height: 1.2;">좋아요 BEST</h4>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -343,7 +343,7 @@ try:
             # 상단: 제목만 배치
             st.markdown(f"""
                 <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900;">
-                    <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">댓글 BEST</h4>
+                    <h4 style="margin: 0; padding: 0; color: #916900; font-weight: bold; line-height: 1.2;">댓글 BEST</h4>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -372,31 +372,52 @@ try:
                 """, unsafe_allow_html=True)
             
             import plotly.express as px
-            
-            # 산점도 생성
-            fig = px.scatter(
-                filtered_df,
-                x='likesCount',
-                y='commentsCount',
-                hover_data={'ownerUsername': True, 'likesCount': True, 'commentsCount': True, 'url': False},
-                labels={'likesCount': '좋아요', 'commentsCount': '댓글'},
-                template='plotly_white'
-            )
-            
-            # 도트 스타일 및 클릭 이벤트 설정 (URL 정보 포함)
-            fig.update_traces(
-                marker=dict(size=12, color='#916900', opacity=0.6),
-                customdata=filtered_df['url']
-            )
-            
-            # 클릭 시 이동을 위한 자바스크립트 우회 설정 대신 Streamlit에서는 도구 설명을 통해 링크 제공
-            st.plotly_chart(fig, use_container_width=True)
-            st.caption("도트에 마우스를 올리면 계정 정보를 확인할 수 있습니다.")
+
+            # 1. 댓글 100개 이상 & 좋아요 1000개 이상 데이터만 필터링
+            matrix_df = filtered_df[
+                (filtered_df['commentsCount'] >= 100) & 
+                (filtered_df['likesCount'] >= 1000)
+            ].copy()
+
+            if not matrix_df.empty:
+                # 2. 산점도 생성 (클릭 이벤트를 위해 selection_mode 설정)
+                fig = px.scatter(
+                    matrix_df,
+                    x='likesCount',
+                    y='commentsCount',
+                    hover_data={'ownerUsername': True, 'likesCount': True, 'commentsCount': True},
+                    labels={'likesCount': '좋아요', 'commentsCount': '댓글'},
+                    template='plotly_white'
+                )
+                
+                fig.update_traces(
+                    marker=dict(size=14, color='#916900', opacity=0.6, line=dict(width=1, color='DarkSlateGrey')),
+                    # 클릭 시 데이터를 식별하기 위해 인덱스 전송
+                    customdata=matrix_df.index
+                )
+                
+                # 3. 차트 출력 및 선택 이벤트 캡처
+                # on_select='rerun' 옵션으로 도트 클릭 시 앱이 반응하도록 설정
+                selected_points = st.plotly_chart(fig, use_container_width=True, on_select="rerun")
+
+                # 4. 클릭한 게시물로 랜딩되는 버튼 동적 생성
+                if selected_points and "selection" in selected_points and selected_points["selection"]["points"]:
+                    # 선택된 점의 인덱스를 통해 URL 추출
+                    point_index = selected_points["selection"]["points"][0]["customdata"]
+                    target_url = matrix_df.loc[point_index, 'url']
+                    target_user = matrix_df.loc[point_index, 'ownerUsername']
+                    
+                    st.success(f"선택된 계정: @{target_user}")
+                    st.link_button("선택한 게시글 바로가기", target_url, use_container_width=True)
+                else:
+                    st.caption("차트의 도트를 클릭하면 해당 게시물 링크가 나타납니다.")
+            else:
+                st.info("좋아요 1000 이상, 댓글 100 이상을 만족하는 게시물이 없습니다.")
 
         with chart_col2:
             st.markdown(f"""
                 <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900; margin-bottom: 10px;">
-                    <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">해시태그 일자별 추이</h4>
+                    <h4 style="margin: 0; padding: 0; color: #916900; font-weight: bold; line-height: 1.2;">해시태그 일자별 추이</h4>
                 </div>
                 """, unsafe_allow_html=True)
 
