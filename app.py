@@ -367,7 +367,7 @@ try:
         with chart_col1:
             st.markdown(f"""
                 <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900; margin-bottom: 10px;">
-                    <h4 style="margin: 0; padding = 0; color: #916900; font-weight: bold; line-height: 1.2;">반응도 매트릭스 (x축 : 좋아요, y축 : 댓글)</h4>
+                    <h4 style="margin: 0; padding: 0; color: #916900; font-weight: bold; line-height: 1.2;">반응도 매트릭스 (x축 : 좋아요, y축 : 댓글)</h4>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -410,9 +410,9 @@ try:
                     st.success(f"선택된 계정: @{target_user}")
                     st.link_button("선택한 게시글 바로가기", target_url, use_container_width=True)
                 else:
-                    st.caption("차트의 도트를 클릭하면 해당 게시물 링크가 나타납니다.")
+                    st.caption("**차트의 도트를 클릭하면 해당 게시물 링크가 나타납니다.")
             else:
-                st.info("좋아요 1000 이상, 댓글 100 이상을 만족하는 게시물이 없습니다.")
+                st.info("**좋아요 1000 이상, 댓글 100 이상을 만족하는 게시물이 없습니다.")
 
         with chart_col2:
             st.markdown(f"""
