@@ -148,7 +148,7 @@ try:
                     wc = WordCloud(
                         font_path=font_file,  # 절대 경로로 지정
                         width=600, 
-                        height=400, 
+                        height=300, 
                         background_color='white',  # 배경은 흰색
                         prefer_horizontal=0.8,
                         color_func=black_color_func
@@ -356,7 +356,74 @@ try:
                 caption_text = best_comment['caption'] if len(str(best_comment['caption'])) < 300 else str(best_comment['caption'])[:300] + "..."
                 st.write(caption_text)
                 st.link_button("게시글 확인", best_comment['url'], use_container_width=True)
+
+
+        # ---------------------------------------------------------
+        # 5. 반응도 매트릭스 및 해시태그 추이 그래프
+        # ---------------------------------------------------------
+        st.write("")
+        chart_col1, chart_col2 = st.columns(2)
+
+        with chart_col1:
+            st.markdown(f"""
+                <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900; margin-bottom: 10px;">
+                    <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">반응도 매트릭스</h4>
+                </div>
+                """, unsafe_allow_html=True)
             
+            import plotly.express as px
+            
+            # 산점도 생성
+            fig = px.scatter(
+                filtered_df,
+                x='likesCount',
+                y='commentsCount',
+                hover_data={'ownerUsername': True, 'likesCount': True, 'commentsCount': True, 'url': False},
+                labels={'likesCount': '좋아요', 'commentsCount': '댓글'},
+                template='plotly_white'
+            )
+            
+            # 도트 스타일 및 클릭 이벤트 설정 (URL 정보 포함)
+            fig.update_traces(
+                marker=dict(size=12, color='#916900', opacity=0.6),
+                customdata=filtered_df['url']
+            )
+            
+            # 클릭 시 이동을 위한 자바스크립트 우회 설정 대신 Streamlit에서는 도구 설명을 통해 링크 제공
+            st.plotly_chart(fig, use_container_width=True)
+            st.caption("도트에 마우스를 올리면 계정 정보를 확인할 수 있습니다.")
+
+        with chart_col2:
+            st.markdown(f"""
+                <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900; margin-bottom: 10px;">
+                    <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">해시태그 일자별 추이</h4>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # 해시태그 데이터 전개 로직
+            hashtag_data = filtered_df[['timestamp_kst', 'hashtags']].copy()
+            hashtag_data['hashtags'] = hashtag_data['hashtags'].str.replace('[', '').str.replace(']', '').str.replace("'", "").str.split(', ')
+            
+            exploded_tags = hashtag_data.explode('hashtags')
+            exploded_tags = exploded_tags[
+                (exploded_tags['hashtags'].notna()) & 
+                (exploded_tags['hashtags'] != '') &
+                (~exploded_tags['hashtags'].isin(STOPWORDS))
+            ]
+
+            if not exploded_tags.empty:
+                # Top 10 태그 추출
+                top_10_tags = exploded_tags['hashtags'].value_counts().head(10).index.tolist()
+                
+                # Top 10 태그만 필터링하여 일자별 집계
+                trend_data = exploded_tags[exploded_tags['hashtags'].isin(top_10_tags)]
+                trend_pivot = trend_data.groupby(['timestamp_kst', 'hashtags']).size().unstack(fill_value=0)
+                
+                # 선 그래프 출력
+                st.line_chart(trend_pivot)
+            else:
+                st.write("분석할 해시태그 데이터가 없습니다.")
+        
         # 4. 전체 게시물 리스트 (가장 아래 배치)
         st.write("")
         st.write(f"**전체 게시물 리스트** ({len(filtered_df)}건)")
