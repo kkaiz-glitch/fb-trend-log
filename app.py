@@ -367,7 +367,7 @@ try:
         with chart_col1:
             st.markdown(f"""
                 <div style="background-color: #FFFFE7; padding: 10px 15px; border-radius: 8px; border-left: 5px solid #916900; margin-bottom: 10px;">
-                    <h4 style="margin: 0; color: #916900; font-weight: bold; line-height: 1.2;">반응도 매트릭스</h4>
+                    <h4 style="margin: 0; padding = 0; color: #916900; font-weight: bold; line-height: 1.2;">반응도 매트릭스 (x축 : 좋아요, y축 : 댓글)</h4>
                 </div>
                 """, unsafe_allow_html=True)
             
