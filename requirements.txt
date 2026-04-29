@@ -8,3 +8,4 @@ openai
 wordcloud
 matplotlib
 wordcloud
+plotly
